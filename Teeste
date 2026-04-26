@@ -1,0 +1,35 @@
+const express = require("express");
+const { TelegramClient } = require("telegram");
+const { StringSession } = require("telegram/sessions");
+
+const app = express();
+
+const apiId = Number(process.env.API_ID);
+const apiHash = process.env.API_HASH;
+const sessionString = process.env.SESSION_STRING || "";
+
+const stringSession = new StringSession(sessionString);
+
+(async () => {
+  const client = new TelegramClient(stringSession, apiId, apiHash, {
+    connectionRetries: 5,
+  });
+
+  await client.start({
+    phoneNumber: async () => process.env.PHONE,
+    password: async () => "",
+    phoneCode: async () => {
+      console.log("Digite o código do Telegram no log");
+    },
+    onError: (err) => console.log(err),
+  });
+
+  console.log("✅ Logado");
+  console.log("SESSION:", client.session.save());
+})();
+
+app.get("/", (req, res) => {
+  res.send("Rodando");
+});
+
+app.listen(process.env.PORT || 3000);
